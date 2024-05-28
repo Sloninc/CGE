@@ -30,7 +30,7 @@ namespace CGE_1
             File.WriteAllText(_outFile, stb.ToString());
             sw.Stop();
             var timer = sw.ElapsedMilliseconds;    
-            Console.WriteLine("Время, затраченное на подсчет слов в однопоточном методе: {0}", timer);
+            Console.WriteLine("Время, затраченное на подсчет слов в однопоточном методе: {0} миллисекунд", timer);
         }
     }
 }

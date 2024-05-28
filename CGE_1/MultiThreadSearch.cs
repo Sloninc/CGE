@@ -14,7 +14,7 @@ namespace CGE_1
     {
         static ConcurrentDictionary<string, int> _dic = new ConcurrentDictionary<string, int>();
         static string _outFile = @"C:\Users\sloni\OneDrive\Рабочий стол\vs\Тестовые задания\СПб ГАУ «Центр государственной экспертизы»\CGE\CGE_1\MOutSearch.txt";
-        public static void Met(string path)
+        public static async Task Met(string path)
         {
             Stopwatch sw = Stopwatch.StartNew();
             string[] str = File.ReadAllLines(path);
@@ -35,10 +35,10 @@ namespace CGE_1
             {
                 stb.Append(string.Format("Слово: {0,-18}\t Количество повторов: {1}\n", item.Key, item.Value));
             }
-            File.WriteAllText(_outFile, stb.ToString());
+            await File.WriteAllTextAsync(_outFile, stb.ToString());
             sw.Stop();
             var timer = sw.ElapsedMilliseconds;
-            Console.WriteLine("Время, затраченное на подсчет слов в многопоточном методе: {0}", timer);
+            Console.WriteLine("Время, затраченное на подсчет слов в многопоточном методе: {0} миллисекунд", timer);
         }
     }
 }
