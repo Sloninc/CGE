@@ -7,10 +7,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="MOutSearch.txt" />
-    <None Remove="SOutSearch.txt" />
-    <None Remove="War_and_Peace.txt" />
-  </ItemGroup>
-
 </Project>
