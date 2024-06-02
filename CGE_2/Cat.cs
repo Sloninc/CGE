@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace CGE_2
 {
+    /// <summary>
+    /// Исходный абстрактный класс, экземпляр которого необходимо создать и инициировать его переменные
+    /// </summary>
     public abstract class Cat
     {
         public int age = 4;
