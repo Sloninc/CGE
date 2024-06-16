@@ -12,28 +12,26 @@ CREATE TABLE [Department] (
 GO
 CREATE TABLE [Employee] (
 	ID numeric IDENTITY,
-	DepartmentID numeric NOT NULL,
+	DepartmentID numeric,
 	ChiefID numeric,
+    CHECK(ChiefID != ID),
 	Name nvarchar(100) NOT NULL,
 	Salary numeric NOT NULL,
   CONSTRAINT [PK_EMPLOYEE] PRIMARY KEY CLUSTERED
   (
   [ID] ASC
   ) WITH (IGNORE_DUP_KEY = OFF)
-
 )
 GO
 
+
 ALTER TABLE [Employee] ADD CONSTRAINT [Employee_fk0] FOREIGN KEY ([DepartmentID]) REFERENCES [Department]([ID])
-ON UPDATE CASCADE
+ON UPDATE cascade
+ON delete set null
 GO
---ALTER TABLE [Employee] CHECK CONSTRAINT [Employee_fk0]
---GO
-ALTER TABLE [Employee]  ADD CONSTRAINT [Employee_fk1] FOREIGN KEY ([ChiefID]) REFERENCES [Employee]([ID]) 
---ON UPDATE NO ACTION
+
+ALTER TABLE [Employee] ADD CONSTRAINT [Employee_fk1] FOREIGN KEY ([ChiefID]) REFERENCES [Employee]([ID])
 GO
---ALTER TABLE [Employee] CHECK CONSTRAINT [Employee_fk1]
---GO
 
 INSERT INTO Department(Name)
 VALUES
@@ -59,7 +57,7 @@ VALUES
 (2, 5, N'Прядкина И.П.', 110000),
 (2, 5, N'Бокайчук Е.Н.', 90000),
 (2, 6, N'Вдовина А.Д.', 85000),
-(3, 3, N'ЯнинаО.П.', 210000),
+(3, 3, N'Янина О.П.', 210000),
 (3, 10, N'Павлова К.В.', 135000),
 (3, 10, N'Графова Л.В.', 127000),
 (3, 11, N'Денисова В.Г.', 96000),
@@ -86,7 +84,7 @@ VALUES
 (7, 29, N'Прохоров М.И.', 83000),
 (7, 29, N'Куликов А.А.', 79000),
 (7, 29, N'Андрейченко В.И.', 79000),
-(7, 29, N'Полозоов Д.И.', 79000),
+(7, 29, N'Полозов Д.И.', 79000),
 (7, 30, N'Константинов К.В.', 90000),
 (7, 29, N'Кривоносов П.А.', 86000),
 (7, 29, N'Петров Н.Г.', 84000),
@@ -101,4 +99,59 @@ VALUES
 (9, 48, N'Флегантова М.В.', 139000),
 (9, 48, N'Криницина С.А.', 123000),
 (10, 3, N'Севостьянов А.Н.', 160000),
-(10, 51, N'Семенов В.О.', 117000)
+(10, 51, N'Семенов В.О.', 117000),
+(10, 51, N'Рыбин О.П.', 117000)
+
+use CGE
+go
+CREATE TRIGGER Employee_delete
+ON Employee
+instead of delete
+AS 
+begin
+update Employee
+set ChiefID = null
+WHERE ChiefID =(SELECT ID FROM deleted)
+delete Employee
+where ID = (SELECT ID FROM deleted)
+end
+
+go
+CREATE TRIGGER Employee_insert_update
+ON Employee
+after insert, update
+AS 
+begin
+declare @ins table (insID numeric, insDepartmentID numeric, insChiefID numeric, insName nvarchar(100), insSalary numeric)
+insert @ins 
+	select ID, DepartmentID, ChiefID, [Name], Salary from Employee
+declare @updCount int
+select @updCount = count(insID) from @ins join Employee on insID=ChiefID and insChiefID = ID
+if (@updCount != 0)
+	begin
+	PRINT N'Внимание! Следующие сотрудники являются начальниками друг друга:'
+	select insID, insChiefID, insName from @ins join Employee on insID=ChiefID and insChiefID = ID
+	end
+end
+
+--Сотрудник с максимальной заработной платой:
+declare @maxSalary numeric
+select @maxSalary = MAX(Salary) from Employee
+select [Name], Salary from Employee where Salary=@maxSalary
+
+--Отдел с самой высокой заработной платой между сотрудниками:
+select Top 1 [Department].[Name], Max(Salary)-MIN(Salary) AS Dif from Employee
+join Department on DepartmentID = [Department].ID
+group by [Department].[Name] 
+order by Dif desc 
+
+--Отдел с максимальной суммарной зарплатой сотрудников:
+select Top 1 [Department].[Name], SUM(Salary) AS MaxSumSalary from Employee
+join Department on DepartmentID = [Department].ID
+group by [Department].[Name] 
+order by MaxSumSalary desc 
+
+--Сотрудника, чье имя начинается на «Р» и заканчивается на «н»:
+select [Name] from Employee
+where [Name] like N'Р%н _._.'
+
